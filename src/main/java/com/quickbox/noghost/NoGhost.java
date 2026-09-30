@@ -26,12 +26,14 @@ public final class NoGhost extends JavaPlugin implements Listener {
     private final AtomicLong hitsReceived = new AtomicLong(0);
     private final AtomicLong hitsCancelled = new AtomicLong(0);
     private final AtomicLong hitsLogged = new AtomicLong(0);
+    private final AtomicLong hitsFixed = new AtomicLong(0);
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private boolean enabled;
     private boolean logConsole;
     private boolean logFile;
+    private boolean fixCancelled;
     private String serverName;
 
     private File logFileHandle;
@@ -67,7 +69,8 @@ public final class NoGhost extends JavaPlugin implements Listener {
     public void onDisable() {
         getLogger().info("NoGhost disabled. Received=" + hitsReceived.get()
                 + " Cancelled=" + hitsCancelled.get()
-                + " Logged=" + hitsLogged.get());
+                + " Logged=" + hitsLogged.get()
+                + " Fixed=" + hitsFixed.get());
     }
 
     private void loadConfigValues() {
@@ -75,22 +78,41 @@ public final class NoGhost extends JavaPlugin implements Listener {
         this.enabled = getConfig().getBoolean("enabled", true);
         this.logConsole = getConfig().getBoolean("logging.console", true);
         this.logFile = getConfig().getBoolean("logging.file", true);
+        this.fixCancelled = getConfig().getBoolean("fix-cancelled-hits", true);
     }
 
     // =========================================================
-    // EVENT LISTENER — LOGGER ONLY
+    // EVENT LISTENER — STORE + FIX
     // =========================================================
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    public void onHitLowest(EntityDamageByEntityEvent event) {
         if (!enabled) return;
 
-        long received = hitsReceived.incrementAndGet();
+        // نحسب كل ضربة تستقبل
+        hitsReceived.incrementAndGet();
 
-        boolean cancelled = event.isCancelled();
-        if (cancelled) {
+        // هل كانت ملغاة؟
+        boolean wasCancelled = event.isCancelled();
+
+        if (wasCancelled) {
             hitsCancelled.incrementAndGet();
         }
+
+        // ============ المعالجة ============
+        // إذا كانت ملغاة من بلوجن آخر، نلغي الإلغاء
+        if (wasCancelled && fixCancelled) {
+            event.setCancelled(false);
+            hitsFixed.incrementAndGet();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
+    public void onHitMonitor(EntityDamageByEntityEvent event) {
+        if (!enabled) return;
+
+        // نسجل الضربة في النهاية
+        boolean cancelled = event.isCancelled();
 
         String attackerName;
         if (event.getDamager() instanceof Player attacker) {
@@ -187,15 +209,12 @@ public final class NoGhost extends JavaPlugin implements Listener {
                     .replace("%received%", String.valueOf(hitsReceived.get()))
                     .replace("%cancelled%", String.valueOf(hitsCancelled.get()))
                     .replace("%logged%", String.valueOf(hitsLogged.get()))
+                    .replace("%fixed%", String.valueOf(hitsFixed.get()))
                     .replace("%server%", serverName);
 
             sender.sendMessage(color(line));
         }
     }
-
-    // =========================================================
-    // HELPERS
-    // =========================================================
 
     private String prefix() {
         return color(getConfig().getString("messages.prefix", "&8[&bNoGhost&8] "));
@@ -204,10 +223,6 @@ public final class NoGhost extends JavaPlugin implements Listener {
     private String color(String text) {
         return ChatColor.translateAlternateColorCodes('&', text == null ? "" : text);
     }
-
-    // =========================================================
-    // TAB COMPLETE
-    // =========================================================
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -220,4 +235,4 @@ public final class NoGhost extends JavaPlugin implements Listener {
         }
         return Collections.emptyList();
     }
-                               }
+}
