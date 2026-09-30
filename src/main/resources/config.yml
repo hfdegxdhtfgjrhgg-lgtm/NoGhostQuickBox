@@ -2,6 +2,9 @@ server-name: "QuickBox"
 
 enabled: true
 
+# هل يصلح الضربات الملغاة؟
+fix-cancelled-hits: true
+
 logging:
   console: true
   file: true
@@ -18,4 +21,5 @@ messages:
     - "&7Hits Received: &f%received%"
     - "&7Hits Cancelled: &f%cancelled%"
     - "&7Hits Logged: &f%logged%"
+    - "&7Hits Fixed: &f%fixed%"
     - "&b&m-----------------------------"
