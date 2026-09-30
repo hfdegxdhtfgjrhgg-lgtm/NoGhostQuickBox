@@ -1,0 +1,20 @@
+name: NoGhost
+version: 1.0.0
+main: com.quickbox.noghost.NoGhost
+api-version: '1.21'
+author: QuickBox
+description: QuickBox PvP hit event logger
+
+commands:
+  noghost:
+    description: NoGhost main command
+    usage: /noghost <status|reload>
+    aliases: [ng]
+
+permissions:
+  noghost.admin:
+    description: Allows NoGhost reload
+    default: op
+  noghost.status:
+    description: Allows viewing NoGhost status
+    default: op
