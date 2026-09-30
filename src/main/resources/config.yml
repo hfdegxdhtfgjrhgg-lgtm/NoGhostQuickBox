@@ -1,0 +1,21 @@
+server-name: "QuickBox"
+
+enabled: true
+
+logging:
+  console: true
+  file: true
+
+messages:
+  prefix: "&8[&bNoGhost&8] "
+  no-permission: "&cليس لديك صلاحية."
+  reload: "&aتم إعادة تحميل NoGhost."
+
+  status:
+    - "&b&m-----------------------------"
+    - "&bNoGhost &7- &fQuickBox"
+    - "&7Status: &a%status%"
+    - "&7Hits Received: &f%received%"
+    - "&7Hits Cancelled: &f%cancelled%"
+    - "&7Hits Logged: &f%logged%"
+    - "&b&m-----------------------------"
